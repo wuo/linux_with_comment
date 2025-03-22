@@ -516,6 +516,8 @@ static void iommu_deinit_device(struct device *dev)
 
 DEFINE_MUTEX(iommu_probe_device_lock);
 
+//根据增加log实验，该函数调用可以来自smmu device 的注册流程，也
+//可以来自client device 的注册流程。
 static int __iommu_probe_device(struct device *dev, struct list_head *group_list)
 {
 	const struct iommu_ops *ops;
@@ -531,6 +533,7 @@ static int __iommu_probe_device(struct device *dev, struct list_head *group_list
 	 * be present, and that any of their registered instances has suitable
 	 * ops for probing, and thus cheekily co-opt the same mechanism.
 	 */
+	//如果当前被遍历的设备，没有关联到一个SMMU，则直接返回。
 	ops = iommu_fwspec_ops(dev_iommu_fwspec_get(dev));
 	if (!ops)
 		return -ENODEV;
@@ -1847,12 +1850,18 @@ static void iommu_group_do_probe_finalize(struct device *dev)
 		ops->probe_finalize(dev);
 }
 
+
+//注意，此处传入的参数仅为bus, 而不是具体的smmu。也就是说，
+//每当有新的smmu device 注册时，调用该函数，并不是为了找到
+//与当前smmu device 关联的device，而是为整个smmu 系统找到
+//smmu device 和device 之间的关系。
 static int bus_iommu_probe(const struct bus_type *bus)
 {
 	struct iommu_group *group, *next;
 	LIST_HEAD(group_list);
 	int ret;
 
+	//为当前bus上的每个device调用probe_iommu_group函数，
 	ret = bus_for_each_dev(bus, NULL, &group_list, probe_iommu_group);
 	if (ret)
 		return ret;
