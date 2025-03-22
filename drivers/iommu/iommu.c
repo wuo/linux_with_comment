@@ -422,6 +422,8 @@ static int iommu_init_device(struct device *dev, const struct iommu_ops *ops)
 		goto err_free;
 	}
 
+	//此处会回调arm_smmu_probe_device(),创建一个arm_smmu_master结构体，并且和和smmu关联，
+	//如何找到dev对应的smmu？实际是通过设备树的信息找到
 	iommu_dev = ops->probe_device(dev);
 	if (IS_ERR(iommu_dev)) {
 		ret = PTR_ERR(iommu_dev);
