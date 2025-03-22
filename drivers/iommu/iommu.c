@@ -252,6 +252,9 @@ static int remove_iommu_group(struct device *dev, void *data)
  *
  * Return: 0 on success, or an error.
  */
+//每次注册一个新的smmu设备时，在smmu 的probe函数中会调用该函数。
+//根据增加log 试验，会遍历当前系统上的每个总线的每个device，查看
+//其是否关联了smmu设备。
 int iommu_device_register(struct iommu_device *iommu,
 			  const struct iommu_ops *ops, struct device *hwdev)
 {
@@ -270,6 +273,7 @@ int iommu_device_register(struct iommu_device *iommu,
 	spin_unlock(&iommu_device_lock);
 
 	for (int i = 0; i < ARRAY_SIZE(iommu_buses) && !err; i++)
+		//此处遍历所有总线，例如platform, amba
 		err = bus_iommu_probe(iommu_buses[i]);
 	if (err)
 		iommu_device_unregister(iommu);
