@@ -557,6 +557,10 @@ static int __iommu_probe_device(struct device *dev, struct list_head *group_list
 		return ret;
 
 	group = dev->iommu_group;
+	//注意group_device 这个结构体，由于device 结构体中并没有某个list_head成员，用于专门
+	//挂在iommu_group 的表上，所以专门创造了这个结构体类型，其成员仅一个list 和dev，
+	//注意，与device中的iommu_group成员相区分，后者是device 用于找到自己对应的group，
+	//而不是反之。
 	gdev = iommu_group_alloc_device(group, dev);
 	mutex_lock(&group->mutex);
 	if (IS_ERR(gdev)) {
